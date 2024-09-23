@@ -3,6 +3,7 @@
 import torch
 from dataloader import load_data
 from transformer_model import train_transformer_model, generate_synthetic_data
+from metrics.transformer_discriminator import TransformerDiscriminator
 from metrics.discriminative_metric import discriminative_score_metric
 from metrics.predictive_metric import predictive_score_metric
 from sklearn.decomposition import PCA
@@ -21,7 +22,7 @@ dropout = 0.1                 # Dropout rate
 max_length = 50               # Maximum sequence length
 batch_size = 32               # Batch size
 learning_rate = 3e-4          # Learning rate for optimizers
-num_epochs = 5                # Number of epochs to train
+num_epochs = 5000                # Number of epochs to train
 accumulation_steps = 8        # Gradient accumulation steps
 device = 'cuda' if torch.cuda.is_available() else 'cpu'  # Device to use
 
@@ -49,8 +50,23 @@ generator = train_transformer_model(
 # Step 3: Generate Synthetic Data
 synthetic_data = generate_synthetic_data(generator, noise_dim, num_samples, device)
 
-# Step 4: Compute Discriminative Score
-discriminative_score = discriminative_score_metric(real_data, synthetic_data)
+# Step 4.1: Initialise Transformer Discriminator
+input_dim = real_data.shape[-1] 
+
+# Initialize the model
+transformer_discriminator = TransformerDiscriminator(
+    input_dim=input_dim,
+    embed_size=embed_size,
+    num_layers=num_layers,
+    num_heads=heads,
+    device=device,
+    forward_expansion=forward_expansion,
+    dropout=dropout,
+    max_length=max_length).to(device)
+
+
+# Step 4.2: Compute Discriminative Score
+discriminative_score = discriminative_score_metric(transformer_discriminator, real_data, synthetic_data, device)
 print(f"Discriminative Score: {discriminative_score:.4f}")
 
 # Step 5: Compute Predictive Score

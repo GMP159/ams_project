@@ -18,7 +18,7 @@ class PostHocRNNPredictor(nn.Module):
         out = self.fc(out)
         return out
 
-def predictive_score_metric(ori_data, generated_data, num_epochs=5, batch_size=128, hidden_dim=None):
+def predictive_score_metric(ori_data, generated_data, num_epochs=1000, batch_size=128, hidden_dim=None):
     """Report the performance of Post-hoc RNN one-step ahead prediction using PyTorch.
 
     Args:
@@ -52,8 +52,8 @@ def predictive_score_metric(ori_data, generated_data, num_epochs=5, batch_size=1
         idx = np.random.permutation(len(generated_data))
         for i in range(0, len(generated_data), batch_size):
             batch_idx = idx[i:i + batch_size]
-            X_mb = generated_data[batch_idx, :-1, :(dim-1)]
-            Y_mb = generated_data[batch_idx, 1:, (dim-1)].unsqueeze(-1)
+            X_mb = generated_data[batch_idx, :(dim-1)].unsqueeze(1)  
+            Y_mb = generated_data[batch_idx, (dim-1)].unsqueeze(-1)
 
             optimizer.zero_grad()
             output = model(X_mb)
