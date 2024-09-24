@@ -62,6 +62,16 @@ def calculate_fid(real_features, synthetic_features):
     mu_real, sigma_real = np.mean(real_features, axis=0), np.cov(real_features, rowvar=False)
     mu_synthetic, sigma_synthetic = np.mean(synthetic_features, axis=0), np.cov(synthetic_features, rowvar=False)
 
+    # Print shapes for debugging
+    print(f"Shape of real feature mean: {mu_real.shape}")
+    print(f"Shape of real covariance matrix: {sigma_real.shape}")
+    print(f"Shape of synthetic feature mean: {mu_synthetic.shape}")
+    print(f"Shape of synthetic covariance matrix: {sigma_synthetic.shape}")
+
+    # Check if covariance matrices are square
+    if sigma_real.shape[0] != sigma_real.shape[1] or sigma_synthetic.shape[0] != sigma_synthetic.shape[1]:
+        raise ValueError("Covariance matrices must be square matrices.")
+
     # Compute the squared difference of means
     diff = mu_real - mu_synthetic
 
@@ -90,12 +100,20 @@ def compute_fid_in_batches(real_data, synthetic_data, model, batch_size=32):
         real_batch = torch.tensor(real_batch, dtype=torch.float32).to(device) # Convert to tensor and move to device
         synthetic_batch = torch.tensor(synthetic_batch, dtype=torch.float32).to(device) # Convert to tensor and move to device
 
-        # Compute activations for both real and synthetic data
-        real_activations.append(model(real_batch).detach().cpu().numpy())
-        synthetic_activations.append(model(synthetic_batch).detach().cpu().numpy())
+        # Extract activations from the last convolutional block instead of the final layer
+        real_activations.append(model.blocks(real_batch).detach().cpu().numpy())  
+        synthetic_activations.append(model.blocks(synthetic_batch).detach().cpu().numpy())  
 
     real_activations = np.concatenate(real_activations, axis=0)
     synthetic_activations = np.concatenate(synthetic_activations, axis=0)
+
+    # Flatten the activations so that each sample is a 1D vector
+    real_activations = real_activations.reshape(real_activations.shape[0], -1)
+    synthetic_activations = synthetic_activations.reshape(synthetic_activations.shape[0], -1)
+
+    # Print shapes before FID calculation
+    print(f"Shape of all real activations: {real_activations.shape}")
+    print(f"Shape of all synthetic activations: {synthetic_activations.shape}")
 
     # Now compute FID using the activations
     fid_value = calculate_fid(real_activations, synthetic_activations)
