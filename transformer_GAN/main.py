@@ -10,6 +10,7 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 import numpy as np
 import matplotlib.pyplot as plt
+from termcolor import colored
 import wandb
 
 wandb.login(key="32b931768d01c82d58c71f449d35c6aea7214264")
@@ -84,11 +85,13 @@ transformer_discriminator = TransformerDiscriminator(
 
 # Step 4.2: Compute Discriminative Score
 discriminative_score = discriminative_score_metric(transformer_discriminator, real_data, synthetic_data, device)
-print(f"Discriminative Score: {discriminative_score:.4f}")
+print(colored(f"Discriminative Score: {discriminative_score:.4f}", 'blue', attrs=['bold']))
+wandb.log({"Discriminative Score": discriminative_score})
 
 # Step 5: Compute Predictive Score
 predictive_score = predictive_score_metric(real_data, synthetic_data)
-print(f"Predictive Score: {predictive_score:.4f}")
+print(colored(f"Predictive Score: {predictive_score:.4f}", 'blue', attrs=['bold']))
+wandb.log({"Predictive Score": predictive_score})
 
 # Step 6: Combine Real and Synthetic Data for Analysis
 real_data_np = real_data.squeeze(0).cpu().numpy()

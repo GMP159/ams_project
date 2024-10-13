@@ -64,6 +64,6 @@ def discriminative_score_metric(transformer_discriminator, real_data, synthetic_
     
     # Discriminative score
     discriminative_score = np.abs(0.5 - accuracy)
-    print("Hello Discrim here!")
+    
     return discriminative_score
 
