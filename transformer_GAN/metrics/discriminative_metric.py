@@ -1,7 +1,12 @@
+
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.optim as optim
 
-def discriminative_score_metric(transformer_discriminator, real_data, synthetic_data, device, test_size=0.3, batch_size=32, num_epochs=5):
+def discriminative_score_metric(transformer_discriminator, real_data, synthetic_data, device, test_size=0.3, batch_size=32, num_epochs=1):
     """
     Calculate the discriminative score for Transformer-based GAN.
     
@@ -17,10 +22,11 @@ def discriminative_score_metric(transformer_discriminator, real_data, synthetic_
     Returns:
     - discriminative_score: np.abs(classification accuracy - 0.5)
     """
-    
+      
     # Combine real and synthetic data
-    combined_data = np.vstack([real_data.cpu().numpy(), synthetic_data])
-    labels = np.array([1]*real_data.shape[0] + [0]*synthetic_data.shape[0])
+    real_data_squeezed = real_data.squeeze(0)  # Removes the batch dimension
+    combined_data = np.vstack([real_data_squeezed.cpu().numpy(), synthetic_data])
+    labels = np.array([1]*real_data.shape[1] + [0]*synthetic_data.shape[0])
     
     # Train-test split
     train_x, test_x, train_y, test_y = train_test_split(combined_data, labels, test_size=test_size, random_state=42)
@@ -58,13 +64,6 @@ def discriminative_score_metric(transformer_discriminator, real_data, synthetic_
     
     # Discriminative score
     discriminative_score = np.abs(0.5 - accuracy)
-    
+    print("Hello Discrim here!")
     return discriminative_score
 
-# Usage
-# real_data = real_data.squeeze(0).to(device)  # Adjusted if needed
-# synthetic_data = torch.tensor(synthetic_data, dtype=torch.float32).to(device)
-# transformer_discriminator = TransformerDiscriminator(input_dim, embed_size, num_layers, heads, device, forward_expansion, dropout, max_length).to(device)
-
-# discriminative_score = discriminative_score_metrics(transformer_discriminator, real_data, synthetic_data, device)
-# print(f'Discriminative Score: {discriminative_score:.4f}')

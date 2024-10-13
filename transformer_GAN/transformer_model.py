@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.cuda.amp import GradScaler, autocast
 import gc
+import wandb
 
 # Transformer Block
 class TransformerBlock(nn.Module):
@@ -132,7 +133,7 @@ def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_lay
             if (_ + 1) % accumulation_steps == 0:
                 scaler.step(opt_gen)
                 scaler.update()
-
+        wandb.log({"Discriminator Loss": loss_disc.item(), "Generator Loss": loss_gen.item(), "epoch": epoch + 1})
         print(f"Epoch [{epoch + 1}/{num_epochs}] \t Discriminator Loss: {loss_disc.item():.4f} \t Generator Loss: {loss_gen.item():.4f}")
 
     return generator
