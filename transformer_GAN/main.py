@@ -108,7 +108,6 @@ tsne_result = tsne.fit_transform(combined_data)
 
 # Step 9: Plot PCA Results
 plt.figure(figsize=(12, 6))
-plt.subplot(1, 2, 1)
 plt.scatter(pca_result[labels == 0, 0], pca_result[labels == 0, 1], alpha=0.5, label='Real')
 plt.scatter(pca_result[labels == 1, 0], pca_result[labels == 1, 1], alpha=0.5, label='Synthetic')
 plt.title('PCA of Real and Synthetic Data')
@@ -116,7 +115,7 @@ plt.legend()
 plt.savefig('pca_plot.png')  # Save PCA plot
 
 # Step 10: Plot t-SNE Results
-plt.subplot(1, 2, 2)
+plt.figure(figsize=(12, 6))
 plt.scatter(tsne_result[labels == 0, 0], tsne_result[labels == 0, 1], alpha=0.5, label='Real')
 plt.scatter(tsne_result[labels == 1, 0], tsne_result[labels == 1, 1], alpha=0.5, label='Synthetic')
 plt.title('t-SNE of Real and Synthetic Data')
