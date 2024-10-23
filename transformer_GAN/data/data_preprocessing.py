@@ -24,15 +24,17 @@ def preprocess_and_save_data(file_path, seq_len):
     idx = np.random.permutation(len(temp_data))  # Shuffle the indices
     randomized_data = []
     for i in range(len(temp_data)):
-        randomized_data.append(temp_data[idx[i]])
+        randomized_data.append(temp_data[idx[i]]) 
 
     # 5. Convert the processed sequences into a PyTorch tensor
     randomized_data = np.array(randomized_data)  # Convert to numpy array first
-    final_data = torch.tensor(randomized_data, dtype=torch.float32).unsqueeze(0)
+    final_data = torch.tensor(randomized_data, dtype=torch.float32)
+    print("Shape of final data is", final_data.shape)
 
     #Save the prerocessed data:
     save_path = "preprocessed_data.pt"
     torch.save(final_data, save_path)
+   
     print(f"Preprocessed data saved to {save_path}")
 
 # Call the function to preprocess and save the data
