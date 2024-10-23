@@ -1,7 +1,7 @@
 # main.py
 
 import torch
-from dataloader import load_data
+from data.dataloader import load_data
 from transformer_model import train_transformer_model, generate_synthetic_data
 from metrics.transformer_discriminator import TransformerDiscriminator
 from metrics.discriminative_metric import discriminative_score_metric
@@ -10,13 +10,14 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 from termcolor import colored
 import wandb
 
-wandb.login(key="32b931768d01c82d58c71f449d35c6aea7214264")
+# wandb.login(key="32b931768d01c82d58c71f449d35c6aea7214264")
 
 # Parameters
-file_path = 'cnc.csv'         # Path to your dataset
+file_path = 'preprocessed_data.pt'         # Path to your dataset
 num_samples = 1000            # Number of synthetic samples to generate
 embed_size = 64               # Embedding size for Transformer
 num_layers = 3                # Number of Transformer layers
@@ -26,23 +27,23 @@ dropout = 0.1                 # Dropout rate
 max_length = 50               # Maximum sequence length
 batch_size = 32               # Batch size
 learning_rate = 3e-4          # Learning rate for optimizers
-num_epochs = 2              # Number of epochs to train
+num_epochs = 1             # Number of epochs to train
 accumulation_steps = 8        # Gradient accumulation steps
 device = 'cuda' if torch.cuda.is_available() else 'cpu'  # Device to use
 
 # wandb initialisation
-wandb.init(project='transformer_GAN_experiment', config={
-    "num_samples": num_samples,
-    "embed_size": embed_size,
-    "num_layers": num_layers,
-    "heads": heads,
-    "forward_expansion": forward_expansion,
-    "dropout": dropout,
-    "max_length": max_length,
-    "batch_size": batch_size,
-    "learning_rate": learning_rate,
-    "num_epochs": num_epochs
-})
+# wandb.init(project='transformer_GAN_experiment', config={
+#     "num_samples": num_samples,
+#     "embed_size": embed_size,
+#     "num_layers": num_layers,
+#     "heads": heads,
+#     "forward_expansion": forward_expansion,
+#     "dropout": dropout,
+#     "max_length": max_length,
+#     "batch_size": batch_size,
+#     "learning_rate": learning_rate,
+#     "num_epochs": num_epochs
+# })
 
 # Step 1: Load Data
 real_data, noise_dim = load_data(file_path)
@@ -67,31 +68,36 @@ generator = train_transformer_model(
 
 # Step 3: Generate Synthetic Data
 synthetic_data = generate_synthetic_data(generator, noise_dim, num_samples, device)
+df = pd.DataFrame(synthetic_data) 
 
-# Step 4.1: Initialise Transformer Discriminator
-input_dim = real_data.shape[-1] 
+# Save the DataFrame to a CSV file
+print("Saving synthetic data:")
+df.to_csv('synthetic_data.csv', index=False)
 
-# Initialize the model
-transformer_discriminator = TransformerDiscriminator(
-    input_dim=input_dim,
-    embed_size=embed_size,
-    num_layers=num_layers,
-    num_heads=heads,
-    device=device,
-    forward_expansion=forward_expansion,
-    dropout=dropout,
-    max_length=max_length).to(device)
+# # Step 4.1: Initialise Transformer Discriminator
+# input_dim = real_data.shape[-1] 
+
+# # Initialize the model
+# transformer_discriminator = TransformerDiscriminator(
+#     input_dim=input_dim,
+#     embed_size=embed_size,
+#     num_layers=num_layers,
+#     num_heads=heads,
+#     device=device,
+#     forward_expansion=forward_expansion,
+#     dropout=dropout,
+#     max_length=max_length).to(device)
 
 
-# Step 4.2: Compute Discriminative Score
-discriminative_score = discriminative_score_metric(transformer_discriminator, real_data, synthetic_data, device)
-print(colored(f"Discriminative Score: {discriminative_score:.4f}", 'blue', attrs=['bold']))
-wandb.log({"Discriminative Score": discriminative_score})
+# # Step 4.2: Compute Discriminative Score
+# discriminative_score = discriminative_score_metric(transformer_discriminator, real_data, synthetic_data, device)
+# print(colored(f"Discriminative Score: {discriminative_score:.4f}", 'blue', attrs=['bold']))
+# wandb.log({"Discriminative Score": discriminative_score})
 
-# Step 5: Compute Predictive Score
-predictive_score = predictive_score_metric(real_data, synthetic_data)
-print(colored(f"Predictive Score: {predictive_score:.4f}", 'blue', attrs=['bold']))
-wandb.log({"Predictive Score": predictive_score})
+# # Step 5: Compute Predictive Score
+# predictive_score = predictive_score_metric(real_data, synthetic_data)
+# print(colored(f"Predictive Score: {predictive_score:.4f}", 'blue', attrs=['bold']))
+# wandb.log({"Predictive Score": predictive_score})
 
 # Step 6: Combine Real and Synthetic Data for Analysis
 real_data_np = real_data.squeeze(0).cpu().numpy()
@@ -122,6 +128,6 @@ plt.title('t-SNE of Real and Synthetic Data')
 plt.legend()
 plt.savefig('tsne_plot.png')  # Save t-SNE plot
 
-wandb.log({"PCA Plot": wandb.Image('pca_plot.png'), "t-SNE Plot": wandb.Image('tsne_plot.png')})
+# wandb.log({"PCA Plot": wandb.Image('pca_plot.png'), "t-SNE Plot": wandb.Image('tsne_plot.png')})
 
 plt.show()

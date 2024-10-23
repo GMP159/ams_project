@@ -102,7 +102,7 @@ def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_lay
             max_length_adjusted = min(max_length, real_data.shape[1] - 1)
             start_idx = torch.randint(0, real_data.shape[1] - max_length_adjusted, (1,)).item()
             end_idx = start_idx + max_length_adjusted
-            real_batch = real_data[:, start_idx:end_idx, :].repeat(batch_size, 1, 1).to(device)
+            real_batch = real_data[:, start_idx:end_idx, :].repeat(batch_size, 1, 1).to(device) 
 
             noise = torch.randn((batch_size, max_length, noise_dim)).to(device)
 
@@ -133,7 +133,7 @@ def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_lay
             if (_ + 1) % accumulation_steps == 0:
                 scaler.step(opt_gen)
                 scaler.update()
-        wandb.log({"Discriminator Loss": loss_disc.item(), "Generator Loss": loss_gen.item(), "epoch": epoch + 1})
+        # wandb.log({"Discriminator Loss": loss_disc.item(), "Generator Loss": loss_gen.item(), "epoch": epoch + 1})
         print(f"Epoch [{epoch + 1}/{num_epochs}] \t Discriminator Loss: {loss_disc.item():.4f} \t Generator Loss: {loss_gen.item():.4f}")
 
     return generator
