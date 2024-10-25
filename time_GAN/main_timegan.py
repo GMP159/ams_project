@@ -29,6 +29,7 @@ from __future__ import print_function
 import argparse
 import numpy as np
 import warnings
+import os
 warnings.filterwarnings("ignore")
 
 # 1. TimeGAN model
@@ -36,9 +37,14 @@ from timegan import timegan
 # 2. Data loading
 from data_loading import real_data_loading, sine_data_generation
 # 3. Metrics
-# from metrics.discriminative_metrics import discriminative_score_metrics
-# from metrics.predictive_metrics import predictive_score_metrics
-# from metrics.visualization_metrics import visualization
+from metrics.discriminative_metrics import discriminative_score_metrics
+from metrics.predictive_metrics import predictive_score_metrics
+from metrics.visualization_metrics import visualization
+# 4. weights and biases
+import wandb
+
+wandb.login(key="32b931768d01c82d58c71f449d35c6aea7214264")
+
 
 
 def main (args):
@@ -61,10 +67,14 @@ def main (args):
     - metric_results: discriminative and predictive scores
   """
   ## Data loading
-  data = args.data
-  ori_data = real_data_loading(data, 24)
+  if args.data_name in ['stock', 'energy', 'CNC']:
+    ori_data = real_data_loading(args.data_name, args.seq_len)
+  elif args.data_name == 'sine':
+    # Set number of samples and its dimensions
+    no, dim = 10000, 5
+    ori_data = sine_data_generation(no, args.seq_len, dim)
     
-  print(' Dataset is loaded and ready.')
+  print(args.data_name + ' dataset is ready.')
     
   ## Synthetic data generation by TimeGAN
   # Set newtork parameters
@@ -74,39 +84,61 @@ def main (args):
   parameters['num_layer'] = args.num_layer
   parameters['iterations'] = args.iteration
   parameters['batch_size'] = args.batch_size
-  parameters['max_time'] = args.max_time
-      
-  generated_data = timegan(ori_data, parameters)   
-  print('Finish Synthetic Data Generation')
-  
-  # ## Performance metrics   
-  # # Output initialization
-  # metric_results = dict()
-  
-  # # 1. Discriminative Score
-  # discriminative_score = list()
-  # for _ in range(args.metric_iteration):
-  #   temp_disc = discriminative_score_metrics(ori_data, generated_data)
-  #   discriminative_score.append(temp_disc)
-      
-  # metric_results['discriminative'] = np.mean(discriminative_score)
-      
-  # # 2. Predictive score
-  # predictive_score = list()
-  # for tt in range(args.metric_iteration):
-  #   temp_pred = predictive_score_metrics(ori_data, generated_data)
-  #   predictive_score.append(temp_pred)   
-      
-  # metric_results['predictive'] = np.mean(predictive_score)     
-          
-  # # 3. Visualization (PCA and tSNE)
-  # visualization(ori_data, generated_data, 'pca')
-  # visualization(ori_data, generated_data, 'tsne')
-  
-  # ## Print discriminative and predictive scores
-  # print(metric_results)
 
-  # return ori_data, generated_data, metric_results
+  # wandb initialisation
+  wandb.init(project='Transformer_GAN', config={
+      parameters['module'] = args.module
+  parameters['hidden_dim'] = args.hidden_dim
+  parameters['num_layer'] = args.num_layer
+  parameters['iterations'] = args.iteration
+  parameters['batch_size'] = args.batch_size
+  })
+        
+  
+  generated_data = timegan(ori_data, parameters)
+  #flatten the 3D generated data to 2D data 
+  flattened_data = generated_data.reshape(-1, generated_data.shape[-1])
+  # Save to CSV
+  np.savetxt('output.csv', flattened_data, delimiter=',') 
+     
+  print('Finish Synthetic Data Generation')
+
+  
+  ## Performance metrics   
+  # Output initialization
+  metric_results = dict()
+  
+  # 1. Discriminative Score
+  discriminative_score = list()
+  for _ in range(args.metric_iteration):
+    temp_disc = discriminative_score_metrics(ori_data, generated_data)
+    discriminative_score.append(temp_disc)
+      
+  metric_results['discriminative'] = np.mean(discriminative_score)
+  #log discriminative score on wandb
+  wandb.log({"Discriminative Score": np.mean(discriminative_score)})
+      
+  # 2. Predictive score
+  predictive_score = list()
+  for tt in range(args.metric_iteration):
+    temp_pred = predictive_score_metrics(ori_data, generated_data)
+    predictive_score.append(temp_pred)   
+      
+  metric_results['predictive'] = np.mean(predictive_score)
+
+  #log predictive score on wandb
+   wandb.log({"Predictive Score": np.mean(predictive_score)}) 
+
+  ## Print discriminative and predictive scores
+  print(metric_results) 
+          
+  # 3. Visualization (PCA and tSNE)
+  visualization(ori_data, generated_data, 'pca')
+  visualization(ori_data, generated_data, 'tsne')
+ 
+  
+
+  return ori_data, generated_data, metric_results
 
 
 if __name__ == '__main__':  
@@ -114,8 +146,9 @@ if __name__ == '__main__':
   # Inputs for the main function
   parser = argparse.ArgumentParser()
   parser.add_argument(
-      '--data',
-      help='data file name',
+      '--data_name',
+      choices=['sine','stock','energy','CNC'],
+      default='stock',
       type=str)
   parser.add_argument(
       '--seq_len',
@@ -124,13 +157,13 @@ if __name__ == '__main__':
       type=int)
   parser.add_argument(
       '--module',
-      choices=['gru','lstm','rnn'],
+      choices=['gru','lstm','lstmLN'],
       default='gru',
       type=str)
   parser.add_argument(
       '--hidden_dim',
       help='hidden state dimensions (should be optimized)',
-      default=22,
+      default=24,
       type=int)
   parser.add_argument(
       '--num_layer',
@@ -148,15 +181,10 @@ if __name__ == '__main__':
       default=128,
       type=int)
   parser.add_argument(
-      '--max_time',
-      help='the number of max time stamps (should be optimized)',
-      default=22,
+      '--metric_iteration',
+      help='iterations of the metric computation',
+      default=10,
       type=int)
-  # parser.add_argument(
-  #     '--metric_iteration',
-  #     help='iterations of the metric computation',
-  #     default=10,
-  #     type=int)
   
   args = parser.parse_args() 
   
