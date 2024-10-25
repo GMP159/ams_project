@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Load the dataset from a CSV file
-df = pd.read_csv('/content/cnc.csv')
+df = pd.read_csv('data/cnc.csv')
 
 # Drop the first 11 columns
 df = df.iloc[:, 11:]
@@ -117,6 +117,7 @@ accumulation_steps = 8
 
 # Initialize the networks
 generator = TransformerGenerator(noise_dim, embed_size, num_layers, heads, device, forward_expansion, dropout, max_length).to(device)
+
 discriminator = TransformerDiscriminator(input_dim, embed_size, num_layers, heads, device, forward_expansion, dropout, max_length).to(device)
 
 # Optimizers

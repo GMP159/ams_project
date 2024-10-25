@@ -14,7 +14,7 @@ import pandas as pd
 from termcolor import colored
 import wandb
 
-# wandb.login(key="32b931768d01c82d58c71f449d35c6aea7214264")
+wandb.login(key="32b931768d01c82d58c71f449d35c6aea7214264")wandb.login(key="32b931768d01c82d58c71f449d35c6aea7214264")
 
 # Parameters
 file_path = 'data/cnc.csv'    # Path to your dataset
@@ -27,23 +27,23 @@ dropout = 0.1                 # Dropout rate
 max_length = 30               # Maximum sequence length
 batch_size = 32               # Batch size
 learning_rate = 3e-4          # Learning rate for optimizers
-num_epochs = 1                # Number of epochs to train
+num_epochs = 1000               # Number of epochs to train
 accumulation_steps = 8        # Gradient accumulation steps
 device = 'cuda' if torch.cuda.is_available() else 'cpu'  # Device to use
 
 # wandb initialisation
-# wandb.init(project='transformer_GAN_experiment', config={
-#     "num_samples": num_samples,
-#     "embed_size": embed_size,
-#     "num_layers": num_layers,
-#     "heads": heads,
-#     "forward_expansion": forward_expansion,
-#     "dropout": dropout,
-#     "max_length": max_length,
-#     "batch_size": batch_size,
-#     "learning_rate": learning_rate,
-#     "num_epochs": num_epochs
-# })
+wandb.init(project='Transformer_GAN', config={
+    "num_samples": num_samples,
+    "embed_size": embed_size,
+    "num_layers": num_layers,
+    "heads": heads,
+    "forward_expansion": forward_expansion,
+    "dropout": dropout,
+    "max_length": max_length,
+    "batch_size": batch_size,
+    "learning_rate": learning_rate,
+    "num_epochs": num_epochs
+})
 
 # Step 1: Load Data
 real_data, noise_dim = load_data(file_path)
@@ -74,30 +74,30 @@ df = pd.DataFrame(synthetic_data)
 print("Saving synthetic data:")
 df.to_csv('synthetic_data.csv', index=False)
 
-# # Step 4.1: Initialise Transformer Discriminator
-# input_dim = real_data.shape[-1] 
+# Step 4.1: Initialise Transformer Discriminator
+input_dim = real_data.shape[-1] 
 
-# # Initialize the model
-# transformer_discriminator = TransformerDiscriminator(
-#     input_dim=input_dim,
-#     embed_size=embed_size,
-#     num_layers=num_layers,
-#     num_heads=heads,
-#     device=device,
-#     forward_expansion=forward_expansion,
-#     dropout=dropout,
-#     max_length=max_length).to(device)
+# Initialize the model
+transformer_discriminator = TransformerDiscriminator(
+    input_dim=input_dim,
+    embed_size=embed_size,
+    num_layers=num_layers,
+    num_heads=heads,
+    device=device,
+    forward_expansion=forward_expansion,
+    dropout=dropout,
+    max_length=max_length).to(device)
 
 
-# # Step 4.2: Compute Discriminative Score
-# discriminative_score = discriminative_score_metric(transformer_discriminator, real_data, synthetic_data, device)
-# print(colored(f"Discriminative Score: {discriminative_score:.4f}", 'blue', attrs=['bold']))
-# wandb.log({"Discriminative Score": discriminative_score})
+# Step 4.2: Compute Discriminative Score
+discriminative_score = discriminative_score_metric(transformer_discriminator, real_data, synthetic_data, device)
+print(colored(f"Discriminative Score: {discriminative_score:.4f}", 'blue', attrs=['bold']))
+wandb.log({"Discriminative Score": discriminative_score})
 
-# # Step 5: Compute Predictive Score
-# predictive_score = predictive_score_metric(real_data, synthetic_data)
-# print(colored(f"Predictive Score: {predictive_score:.4f}", 'blue', attrs=['bold']))
-# wandb.log({"Predictive Score": predictive_score})
+# Step 5: Compute Predictive Score
+predictive_score = predictive_score_metric(real_data, synthetic_data)
+print(colored(f"Predictive Score: {predictive_score:.4f}", 'blue', attrs=['bold']))
+wandb.log({"Predictive Score": predictive_score})
 
 # Step 6: Combine Real and Synthetic Data for Analysis
 real_data_np = real_data.squeeze(0).cpu().numpy()
@@ -128,6 +128,6 @@ plt.title('t-SNE of Real and Synthetic Data')
 plt.legend()
 plt.savefig('tsne_plot.png')  # Save t-SNE plot
 
-# wandb.log({"PCA Plot": wandb.Image('pca_plot.png'), "t-SNE Plot": wandb.Image('tsne_plot.png')})
+wandb.log({"PCA Plot": wandb.Image('pca_plot.png'), "t-SNE Plot": wandb.Image('tsne_plot.png')})
 
 plt.show()
