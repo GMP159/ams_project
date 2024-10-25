@@ -1,7 +1,7 @@
 # main.py
 
 import torch
-from data.dataloader import load_data
+from dataloader import load_data
 from transformer_model import train_transformer_model, generate_synthetic_data
 from metrics.transformer_discriminator import TransformerDiscriminator
 from metrics.discriminative_metric import discriminative_score_metric
@@ -17,7 +17,7 @@ import wandb
 # wandb.login(key="32b931768d01c82d58c71f449d35c6aea7214264")
 
 # Parameters
-file_path = 'data/preprocessed_data.pt'         # Path to your dataset
+file_path = 'data/cnc.csv'         # Path to your dataset
 num_samples = 1000            # Number of synthetic samples to generate
 embed_size = 64               # Embedding size for Transformer
 num_layers = 3                # Number of Transformer layers
