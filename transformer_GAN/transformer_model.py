@@ -74,8 +74,8 @@ class TransformerDiscriminator(nn.Module):
         N, seq_length, _ = x.shape
         
         positions = torch.arange(0, seq_length).expand(N, seq_length).to(self.device)
-        print(f"positions shape: {positions.shape}")
-        print(f"x shape: {x.shape}")
+        # print(f"positions shape: {positions.shape}")
+        # print(f"x shape: {x.shape}")
         out = self.word_embedding(x) + self.position_embedding(positions)
 
         for layer in self.layers:
@@ -83,7 +83,7 @@ class TransformerDiscriminator(nn.Module):
 
         return self.fc_out(out)
 
-Training Transformer GAN Model
+#Training Transformer GAN Model
 def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_layers, heads, forward_expansion,
                             dropout, max_length, batch_size, learning_rate, num_epochs, accumulation_steps, device):
     generator = TransformerGenerator(noise_dim, embed_size, num_layers, heads, device, forward_expansion, dropout, max_length).to(device)

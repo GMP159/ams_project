@@ -4,7 +4,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 def load_data(file_path):
     # Load the dataset from a CSV file
-    df = pd.read_csv("cnc.csv")
+    df = pd.read_csv("data/cnc.csv")
 
     # Drop the first 11 columns
     df = df.iloc[:, 11:]
