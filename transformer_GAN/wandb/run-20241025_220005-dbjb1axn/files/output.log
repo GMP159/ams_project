@@ -817,3 +817,5 @@ Epoch [806/1000] 	 Discriminator Loss: 0.0002 	 Generator Loss: 0.7705
 Epoch [807/1000] 	 Discriminator Loss: 0.0002 	 Generator Loss: 0.7705
 Epoch [808/1000] 	 Discriminator Loss: 0.0002 	 Generator Loss: 0.7682
 Epoch [809/1000] 	 Discriminator Loss: 0.0002 	 Generator Loss: 0.7701
+Epoch [810/1000] 	 Discriminator Loss: 0.0002 	 Generator Loss: 0.7724
+Epoch [811/1000] 	 Discriminator Loss: 0.0002 	 Generator Loss: 0.7726
