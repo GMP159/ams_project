@@ -86,7 +86,7 @@ def main (args):
   parameters['batch_size'] = args.batch_size
 
   # wandb initialisation
-  wandb.init(project='transformer_GAN_experiment', name = "lstm_10k",
+  wandb.init(project='time_GAN', name = "lstm_10k",
   config={ "module" : parameters['module'], 
   "hidden_dim" : parameters['hidden_dim'],
   "num_layer" : parameters['num_layer'],
