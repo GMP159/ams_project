@@ -14,7 +14,7 @@ import pandas as pd
 from termcolor import colored
 import wandb
 
-wandb.login(key="32b931768d01c82d58c71f449d35c6aea7214264")wandb.login(key="32b931768d01c82d58c71f449d35c6aea7214264")
+wandb.login(key="32b931768d01c82d58c71f449d35c6aea7214264")
 
 # Parameters
 file_path = 'data/cnc.csv'    # Path to your dataset

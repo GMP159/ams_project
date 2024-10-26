@@ -21,6 +21,7 @@ from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import numpy as np
+import wandb
 
    
 def visualization (ori_data, generated_data, analysis):
@@ -104,5 +105,6 @@ def visualization (ori_data, generated_data, analysis):
     plt.title('t-SNE plot')
     plt.xlabel('x-tsne')
     plt.ylabel('y_tsne')
-    plt.savefig('pca_plot.png', format='png')
+    plt.savefig('tsne_plot.png', format='png')
+    wandb.log({"PCA Plot": wandb.Image('pca_plot.png'), "t-SNE Plot": wandb.Image('tsne_plot.png')})
     plt.show()    
