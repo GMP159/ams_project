@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-def discriminative_score_metric(transformer_discriminator, real_data, synthetic_data, device, test_size=0.3, batch_size=32, num_epochs=1000):
+def discriminative_score_metric(transformer_discriminator, real_data, synthetic_data, device, test_size=0.3, batch_size=32, num_epochs=100):
     """
     Calculate the discriminative score for Transformer-based GAN.
     
