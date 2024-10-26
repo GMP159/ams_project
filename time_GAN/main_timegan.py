@@ -33,7 +33,7 @@ import os
 warnings.filterwarnings("ignore")
 
 # 1. TimeGAN model
-from timegan import timegan
+from time_gan import timegan
 # 2. Data loading
 from data_loading import real_data_loading, sine_data_generation
 # 3. Metrics
@@ -86,12 +86,12 @@ def main (args):
   parameters['batch_size'] = args.batch_size
 
   # wandb initialisation
-  wandb.init(project='Transformer_GAN', name = "     ",
-  config={ parameters['module'] = args.module
-  parameters['hidden_dim'] = args.hidden_dim
-  parameters['num_layer'] = args.num_layer
-  parameters['iterations'] = args.iteration
-  parameters['batch_size'] = args.batch_size
+  wandb.init(project='transformer_GAN_experiment', name = "lstm_10k",
+  config={ "module" : parameters['module'], 
+  "hidden_dim" : parameters['hidden_dim'],
+  "num_layer" : parameters['num_layer'],
+  "iteration" : parameters['iterations'],
+  "batch_size" : parameters['batch_size']
   })
         
   
