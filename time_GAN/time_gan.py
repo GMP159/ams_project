@@ -19,6 +19,7 @@ Note: Use original data as training set to generater synthetic data (time-series
 # Necessary Packages
 import tensorflow as tf
 import numpy as np
+import wandb
 from utils import extract_time, rnn_cell, random_generator, batch_generator
 
 
@@ -190,6 +191,7 @@ def timegan (ori_data, parameters):
   D_loss_fake = tf.losses.sigmoid_cross_entropy(tf.zeros_like(Y_fake), Y_fake)
   D_loss_fake_e = tf.losses.sigmoid_cross_entropy(tf.zeros_like(Y_fake_e), Y_fake_e)
   D_loss = D_loss_real + D_loss_fake + gamma * D_loss_fake_e
+  #wandb.log({"Discriminative loss": D_loss})
             
   # Generator loss
   # 1. Adversarial loss
@@ -207,7 +209,8 @@ def timegan (ori_data, parameters):
     
   # 4. Summation
   G_loss = G_loss_U + gamma * G_loss_U_e + 100 * tf.sqrt(G_loss_S) + 100*G_loss_V 
-            
+  #wandb.log({"Generator loss": G_loss})
+
   # Embedder network loss
   E_loss_T0 = tf.losses.mean_squared_error(X, X_tilde)
   E_loss0 = 10*tf.sqrt(E_loss_T0)
@@ -279,6 +282,14 @@ def timegan (ori_data, parameters):
     # Train discriminator (only when the discriminator does not work well)
     if (check_d_loss > 0.15):        
       _, step_d_loss = sess.run([D_solver, D_loss], feed_dict={X: X_mb, T: T_mb, Z: Z_mb})
+
+    wandb.log({
+        "Discriminator Loss": step_d_loss,
+        "Generator Loss U": step_g_loss_u,
+        "Generator Loss S": step_g_loss_s,
+        "Generator Loss V": step_g_loss_v,
+        "Embedding Loss T0": step_e_loss_t0
+    })  
         
     # Print multiple checkpoints
     if itt % 1000 == 0:

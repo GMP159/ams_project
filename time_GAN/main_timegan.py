@@ -86,8 +86,8 @@ def main (args):
   parameters['batch_size'] = args.batch_size
 
   # wandb initialisation
-  wandb.init(project='Transformer_GAN', config={
-      parameters['module'] = args.module
+  wandb.init(project='Transformer_GAN', name = "     ",
+  config={ parameters['module'] = args.module
   parameters['hidden_dim'] = args.hidden_dim
   parameters['num_layer'] = args.num_layer
   parameters['iterations'] = args.iteration
@@ -116,7 +116,7 @@ def main (args):
       
   metric_results['discriminative'] = np.mean(discriminative_score)
   #log discriminative score on wandb
-  wandb.log({"Discriminative Score": np.mean(discriminative_score)})
+  wandb.log({"Discriminative Score": metric_results['discriminative']})
       
   # 2. Predictive score
   predictive_score = list()
@@ -127,7 +127,7 @@ def main (args):
   metric_results['predictive'] = np.mean(predictive_score)
 
   #log predictive score on wandb
-   wandb.log({"Predictive Score": np.mean(predictive_score)}) 
+  wandb.log({"Predictive Score": metric_results['predictive']}) 
 
   ## Print discriminative and predictive scores
   print(metric_results) 
