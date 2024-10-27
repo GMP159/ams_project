@@ -99,8 +99,8 @@ def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_lay
         gc.collect()
 
         #1.1 Learning rate scheduler to change learning rate during training
-        scheduler_gen = torch.optim.lr_scheduler.StepLR(opt_gen, step_size=10, gamma=0.5)
-        scheduler_disc = torch.optim.lr_scheduler.StepLR(opt_disc, step_size=10, gamma=0.8)
+        scheduler_gen = torch.optim.lr_scheduler.StepLR(opt_gen, step_size=10, gamma=0.8)
+        scheduler_disc = torch.optim.lr_scheduler.StepLR(opt_disc, step_size=10, gamma=0.4)
 
         for _ in range(batch_size):
             torch.cuda.empty_cache()
@@ -123,16 +123,37 @@ def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_lay
                 subsequence = real_data[:, start_idx:end_idx, :]
                 real_batch.append(subsequence)
 
+
+            # start_idx = 0
+
+            # for _ in range(batch_size):
+            #     # Ensure the end index does not exceed the data length
+            #     end_idx = start_idx + max_length_adjusted
+                
+            #     # Wrap around if end_idx exceeds data length to start sequentially from beginning again
+            #     if end_idx > real_data.shape[1]:
+            #         start_idx = 0
+            #         end_idx = max_length_adjusted
+
+            #     # Slice a unique subsequence and add to the list
+            #     subsequence = real_data[:, start_idx:end_idx, :]
+            #     real_batch.append(subsequence)
+
+            #     # Move start_idx forward for the next batch
+            #     start_idx = end_idx
+
             
             # Stack all unique subsequences into a single batch tensor
             real_batch = torch.cat(real_batch, dim=0).to(device)
-            # print("Size of real_batch:", real_batch.shape)
+            #print("Size of real_batch:", real_batch.shape, real_batch)
 
 
             noise = torch.randn((batch_size, max_length, noise_dim)).to(device)
 
+            # 2. Discriminator training (once per epoch)
             with autocast():
                 fake_data = generator(noise)
+                
                 disc_real = discriminator(real_batch).view(-1)
                 loss_disc_real = criterion(disc_real, torch.ones_like(disc_real))
                 disc_fake = discriminator(fake_data.detach()).view(-1)
@@ -147,9 +168,19 @@ def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_lay
                 scaler.step(opt_disc)
                 scaler.update()
 
-            with autocast():
-                output = discriminator(fake_data).view(-1)
-                loss_gen = criterion(output, torch.ones_like(output))
+            # with autocast():
+            #     output = discriminator(fake_data).view(-1)
+            #     loss_gen = criterion(output, torch.ones_like(output))
+            
+            # 2. Generator training (train twice)
+            for _ in range(2):  # Train the generator twice
+                with autocast():
+                    # Generate fake data again for the generator training
+                    fake_data = generator(noise)
+
+                    # Calculate generator loss
+                    output = discriminator(fake_data).view(-1)
+                    loss_gen = criterion(output, torch.ones_like(output))
 
             # Gradient Accumulation for Generator
             loss_gen = loss_gen / accumulation_steps

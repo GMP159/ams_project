@@ -7,7 +7,7 @@ def load_data(file_path):
     df = pd.read_csv("data/cnc.csv")
 
     # Drop the first 11 columns
-    df = df.iloc[:, 11:]
+    df = df.iloc[:, 17:]
 
     # Normalize the data
     scaler = MinMaxScaler()

@@ -18,7 +18,7 @@ wandb.login(key="32b931768d01c82d58c71f449d35c6aea7214264")
 
 # Parameters
 file_path = 'data/cnc.csv'    # Path to your dataset
-num_samples = 10000            # Number of synthetic samples to generate
+num_samples = 10000           # Number of synthetic samples to generate
 embed_size = 64               # Embedding size for Transformer
 num_layers = 3                # Number of Transformer layers
 heads = 4                     # Number of attention heads
@@ -27,7 +27,7 @@ dropout = 0.1                 # Dropout rate
 max_length = 50               # Maximum sequence length
 batch_size = 64               # Batch size
 learning_rate = 2e-4          # Learning rate for optimizers
-num_epochs = 50              # Number of epochs to train
+num_epochs = 500             # Number of epochs to train
 accumulation_steps = 8        # Gradient accumulation steps
 device = 'cuda' if torch.cuda.is_available() else 'cpu'  # Device to use
 
