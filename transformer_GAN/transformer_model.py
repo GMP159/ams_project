@@ -74,14 +74,37 @@ class TransformerDiscriminator(nn.Module):
         N, seq_length, _ = x.shape
         
         positions = torch.arange(0, seq_length).expand(N, seq_length).to(self.device)
-        # print(f"positions shape: {positions.shape}")
-        # print(f"x shape: {x.shape}")
+        
         out = self.word_embedding(x) + self.position_embedding(positions)
 
         for layer in self.layers:
             out = layer(out, out, out)
 
         return self.fc_out(out)
+
+
+
+# Switching BCEWithLogitsLoss with a WGAN-GP loss in discriminator loss calculation
+def gradient_penalty(discriminator, real_data, fake_data, device):
+    batch_size, _, _ = real_data.size()
+    epsilon = torch.rand(batch_size, 1, 1).expand_as(real_data).to(device)
+    interpolated = epsilon * real_data + (1 - epsilon) * fake_data
+    interpolated.requires_grad = True
+
+    prob_interpolated = discriminator(interpolated)
+
+    gradients = torch.autograd.grad(
+        outputs=prob_interpolated,
+        inputs=interpolated,
+        grad_outputs=torch.ones(prob_interpolated.size()).to(device),
+        create_graph=True,
+        retain_graph=True,
+        only_inputs=True
+    )[0]
+
+    gradients = gradients.view(gradients.size(0), -1)
+    gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean()
+    return gradient_penalty
 
 #Training Transformer GAN Model
 def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_layers, heads, forward_expansion,
@@ -99,8 +122,8 @@ def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_lay
         gc.collect()
 
         #1.1 Learning rate scheduler to change learning rate during training
-        scheduler_gen = torch.optim.lr_scheduler.StepLR(opt_gen, step_size=10, gamma=0.8)
-        scheduler_disc = torch.optim.lr_scheduler.StepLR(opt_disc, step_size=10, gamma=0.4)
+        scheduler_gen = torch.optim.lr_scheduler.StepLR(opt_gen, step_size=4, gamma=0.2)
+        scheduler_disc = torch.optim.lr_scheduler.StepLR(opt_disc, step_size=4, gamma=0.4)
 
         for _ in range(batch_size):
             torch.cuda.empty_cache()
@@ -123,42 +146,30 @@ def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_lay
                 subsequence = real_data[:, start_idx:end_idx, :]
                 real_batch.append(subsequence)
 
-
-            # start_idx = 0
-
-            # for _ in range(batch_size):
-            #     # Ensure the end index does not exceed the data length
-            #     end_idx = start_idx + max_length_adjusted
-                
-            #     # Wrap around if end_idx exceeds data length to start sequentially from beginning again
-            #     if end_idx > real_data.shape[1]:
-            #         start_idx = 0
-            #         end_idx = max_length_adjusted
-
-            #     # Slice a unique subsequence and add to the list
-            #     subsequence = real_data[:, start_idx:end_idx, :]
-            #     real_batch.append(subsequence)
-
-            #     # Move start_idx forward for the next batch
-            #     start_idx = end_idx
-
-            
-            # Stack all unique subsequences into a single batch tensor
-            real_batch = torch.cat(real_batch, dim=0).to(device)
-            #print("Size of real_batch:", real_batch.shape, real_batch)
-
-
+            real_batch = torch.cat(real_batch)
             noise = torch.randn((batch_size, max_length, noise_dim)).to(device)
 
-            # 2. Discriminator training (once per epoch)
+            
+
+            lambda_gp = 10  # Gradient penalty weight
+
+            # discriminator loss calculation
             with autocast():
                 fake_data = generator(noise)
-                
                 disc_real = discriminator(real_batch).view(-1)
-                loss_disc_real = criterion(disc_real, torch.ones_like(disc_real))
                 disc_fake = discriminator(fake_data.detach()).view(-1)
-                loss_disc_fake = criterion(disc_fake, torch.zeros_like(disc_fake))
-                loss_disc = (loss_disc_real + loss_disc_fake) / 2
+                gp = gradient_penalty(discriminator, real_batch, fake_data.detach(), device)
+                loss_disc = -torch.mean(disc_real) + torch.mean(disc_fake) + lambda_gp * gp
+
+            # # 2. Discriminator training (once per epoch)
+            # with autocast():
+            #     fake_data = generator(noise)
+                
+            #     disc_real = discriminator(real_batch).view(-1)
+            #     loss_disc_real = criterion(disc_real, torch.ones_like(disc_real))
+            #     disc_fake = discriminator(fake_data.detach()).view(-1)
+            #     loss_disc_fake = criterion(disc_fake, torch.zeros_like(disc_fake))
+            #     loss_disc = (loss_disc_real + loss_disc_fake) / 2
 
             # Gradient Accumulation for Discriminator
             loss_disc = loss_disc / accumulation_steps
@@ -176,7 +187,7 @@ def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_lay
             for _ in range(2):  # Train the generator twice
                 with autocast():
                     # Generate fake data again for the generator training
-                    fake_data = generator(noise)
+                    #fake_data = generator(noise)
 
                     # Calculate generator loss
                     output = discriminator(fake_data).view(-1)
