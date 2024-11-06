@@ -82,30 +82,6 @@ class TransformerDiscriminator(nn.Module):
 
         return self.fc_out(out)
 
-
-
-# Switching BCEWithLogitsLoss with a WGAN-GP loss in discriminator loss calculation
-def gradient_penalty(discriminator, real_data, fake_data, device):
-    batch_size, _, _ = real_data.size()
-    epsilon = torch.rand(batch_size, 1, 1).expand_as(real_data).to(device)
-    interpolated = epsilon * real_data + (1 - epsilon) * fake_data
-    interpolated.requires_grad = True
-
-    prob_interpolated = discriminator(interpolated)
-
-    gradients = torch.autograd.grad(
-        outputs=prob_interpolated,
-        inputs=interpolated,
-        grad_outputs=torch.ones(prob_interpolated.size()).to(device),
-        create_graph=True,
-        retain_graph=True,
-        only_inputs=True
-    )[0]
-
-    gradients = gradients.view(gradients.size(0), -1)
-    gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean()
-    return gradient_penalty
-
 #Training Transformer GAN Model
 def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_layers, heads, forward_expansion,
                             dropout, max_length, batch_size, learning_rate, num_epochs, accumulation_steps, device):
@@ -122,22 +98,24 @@ def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_lay
         gc.collect()
 
         #1.1 Learning rate scheduler to change learning rate during training
-        scheduler_gen = torch.optim.lr_scheduler.StepLR(opt_gen, step_size=4, gamma=0.2)
-        scheduler_disc = torch.optim.lr_scheduler.StepLR(opt_disc, step_size=4, gamma=0.4)
+        scheduler_gen = torch.optim.lr_scheduler.StepLR(opt_gen, step_size=10, gamma=0.5)
+        scheduler_disc = torch.optim.lr_scheduler.StepLR(opt_disc, step_size=10, gamma=0.8)
+
 
         for _ in range(batch_size):
             torch.cuda.empty_cache()
             gc.collect()
 
             max_length_adjusted = min(max_length, real_data.shape[1] - 1)
+        #Batch generation with random index and repeatition
+
         #     start_idx = torch.randint(0, real_data.shape[1] - max_length_adjusted, (1,)).item()
         #     end_idx = start_idx + max_length_adjusted
         #     real_batch = real_data[:, start_idx:end_idx, :].repeat(batch_size, 1, 1).to(device) 
-        # print("Size of real_batch:", real_batch.shape)
+        # # print("Size of real_batch:", real_batch.shape)
 
-
+        # batch generation with continuous index from the data
             real_batch = []
-
             for _ in range(batch_size):
                 start_idx = torch.randint(0, real_data.shape[1] - max_length_adjusted, (1,)).item()
                 end_idx = start_idx + max_length_adjusted
@@ -145,31 +123,22 @@ def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_lay
                 # Slice a unique subsequence and add to the list
                 subsequence = real_data[:, start_idx:end_idx, :]
                 real_batch.append(subsequence)
-
-            real_batch = torch.cat(real_batch)
+            
+            # Stack all unique subsequences into a single batch tensor
+            real_batch = torch.cat(real_batch, dim=0).to(device)
             noise = torch.randn((batch_size, max_length, noise_dim)).to(device)
 
-            
-
-            lambda_gp = 10  # Gradient penalty weight
-
-            # discriminator loss calculation
+            # 2. Discriminator training (once per epoch)
             with autocast():
                 fake_data = generator(noise)
-                disc_real = discriminator(real_batch).view(-1)
-                disc_fake = discriminator(fake_data.detach()).view(-1)
-                gp = gradient_penalty(discriminator, real_batch, fake_data.detach(), device)
-                loss_disc = -torch.mean(disc_real) + torch.mean(disc_fake) + lambda_gp * gp
-
-            # # 2. Discriminator training (once per epoch)
-            # with autocast():
-            #     fake_data = generator(noise)
                 
-            #     disc_real = discriminator(real_batch).view(-1)
-            #     loss_disc_real = criterion(disc_real, torch.ones_like(disc_real))
-            #     disc_fake = discriminator(fake_data.detach()).view(-1)
-            #     loss_disc_fake = criterion(disc_fake, torch.zeros_like(disc_fake))
-            #     loss_disc = (loss_disc_real + loss_disc_fake) / 2
+                disc_real = discriminator(real_batch).view(-1)
+                #print("disc_real",disc_real.size(), disc_real)
+                loss_disc_real = criterion(disc_real, torch.ones_like(disc_real))
+                disc_fake = discriminator(fake_data.detach()).view(-1)
+                #print("disc_fake",disc_fake.size(), disc_fake)
+                loss_disc_fake = criterion(disc_fake, torch.zeros_like(disc_fake))
+                loss_disc = (loss_disc_real + loss_disc_fake) / 2
 
             # Gradient Accumulation for Discriminator
             loss_disc = loss_disc / accumulation_steps
@@ -183,23 +152,21 @@ def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_lay
             #     output = discriminator(fake_data).view(-1)
             #     loss_gen = criterion(output, torch.ones_like(output))
             
-            # 2. Generator training (train twice)
-            for _ in range(2):  # Train the generator twice
+            # 2. Generator training
+            for _ in range(6):  # Train the generator five times
                 with autocast():
-                    # Generate fake data again for the generator training
-                    #fake_data = generator(noise)
-
                     # Calculate generator loss
                     output = discriminator(fake_data).view(-1)
+                    #print("Discriminator output", output.size(), output)
                     loss_gen = criterion(output, torch.ones_like(output))
 
-            # Gradient Accumulation for Generator
-            loss_gen = loss_gen / accumulation_steps
-            generator.zero_grad()
-            scaler.scale(loss_gen).backward()
-            if (_ + 1) % accumulation_steps == 0:
-                scaler.step(opt_gen)
-                scaler.update()
+                # Gradient Accumulation for Generator
+                loss_gen = loss_gen / accumulation_steps
+                generator.zero_grad()
+                scaler.scale(loss_gen).backward()
+                if (_ + 1) % accumulation_steps == 0:
+                    scaler.step(opt_gen)
+                    scaler.update()
 
         # 1.2 Update the learning rate
         scheduler_gen.step()
