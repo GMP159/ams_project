@@ -24,3 +24,4 @@ config: {'num_samples': 10000, 'embed_size': 64, 'num_layers': 3, 'heads': 4, 'f
 2024-11-06 19:35:59,335 INFO    MainThread:4143868 [wandb_run.py:_redirect():2372] Wrapping output streams.
 2024-11-06 19:35:59,335 INFO    MainThread:4143868 [wandb_run.py:_redirect():2397] Redirects installed.
 2024-11-06 19:35:59,337 INFO    MainThread:4143868 [wandb_init.py:init():900] run started, returning control to user process
+2024-11-07 00:27:17,478 WARNING MsgRouterThr:4143868 [router.py:message_loop():77] message_loop has been closed
