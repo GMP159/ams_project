@@ -99,7 +99,7 @@ def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_lay
 
         #1.1 Learning rate scheduler to change learning rate during training
         scheduler_gen = torch.optim.lr_scheduler.StepLR(opt_gen, step_size=10, gamma=0.5)
-        scheduler_disc = torch.optim.lr_scheduler.StepLR(opt_disc, step_size=10, gamma=0.8)
+        scheduler_disc = torch.optim.lr_scheduler.StepLR(opt_disc, step_size=10, gamma=0.5)
 
 
         for _ in range(batch_size):
@@ -107,14 +107,15 @@ def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_lay
             gc.collect()
 
             max_length_adjusted = min(max_length, real_data.shape[1] - 1)
-        #Batch generation with random index and repeatition
+
+        #  Batch generation with random index and repetition
 
         #     start_idx = torch.randint(0, real_data.shape[1] - max_length_adjusted, (1,)).item()
         #     end_idx = start_idx + max_length_adjusted
         #     real_batch = real_data[:, start_idx:end_idx, :].repeat(batch_size, 1, 1).to(device) 
         # # print("Size of real_batch:", real_batch.shape)
 
-        # batch generation with continuous index from the data
+        # Batch generation with random index and without repetition
             real_batch = []
             for _ in range(batch_size):
                 start_idx = torch.randint(0, real_data.shape[1] - max_length_adjusted, (1,)).item()
@@ -148,17 +149,17 @@ def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_lay
                 scaler.step(opt_disc)
                 scaler.update()
 
-            # with autocast():
-            #     output = discriminator(fake_data).view(-1)
-            #     loss_gen = criterion(output, torch.ones_like(output))
+            with autocast():
+                output = discriminator(fake_data).view(-1)
+                loss_gen = criterion(output, torch.ones_like(output))
             
-            # 2. Generator training
-            for _ in range(6):  # Train the generator five times
-                with autocast():
-                    # Calculate generator loss
-                    output = discriminator(fake_data).view(-1)
-                    #print("Discriminator output", output.size(), output)
-                    loss_gen = criterion(output, torch.ones_like(output))
+            # # 2. Generator training
+            # for _ in range(6):  # Train the generator five times
+            #     with autocast():
+            #         # Calculate generator loss
+            #         output = discriminator(fake_data).view(-1)
+            #         #print("Discriminator output", output.size(), output)
+            #         loss_gen = criterion(output, torch.ones_like(output))
 
                 # Gradient Accumulation for Generator
                 loss_gen = loss_gen / accumulation_steps
