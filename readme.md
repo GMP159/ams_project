@@ -7,24 +7,24 @@ This project focuses on the generation of synthetic data to model and predict th
 The dataset contains 22 columns and 19,388 rows, with all values being numerical.
 Features (18 columns):
 
-**Force Parameters:**
-f_x_sim, f_y_sim, f_z_sim: Simulated force components along the X, Y, and Z axes.  
-f_sp_sim: Simulated force along the spindle axis.  
-**Moment and Material Removed:**  
-m_sp_sim: Simulated spindle moment.  
-materialremoved_sim: Simulated amount of material removed.  
-**Acceleration:**  
-a_x, a_y, a_z: Acceleration along the X, Y, and Z axes.  
-a_sp: Acceleration along the spindle axis.  
-**Velocity:**  
-v_x, v_y, v_z: Velocity along the X, Y, and Z axes.  
-v_sp: Velocity along the spindle axis.  
-**Position:**  
-pos_x, pos_y, pos_z: Position coordinates along the X, Y, and Z axes.  
-pos_sp: Position along the spindle axis.  
-**Current Parameters:**  
-curr_x, curr_y, curr_z: Current consumption along the X, Y, and Z axes.  
-curr_sp: Current consumption along the spindle axis.
+- **Force Parameters:**
+  - f_x_sim, f_y_sim, f_z_sim: Simulated force components along the X, Y, and Z axes.  
+  - f_sp_sim: Simulated force along the spindle axis.  
+- **Moment and Material Removed:**  
+  - m_sp_sim: Simulated spindle moment.  
+  - materialremoved_sim: Simulated amount of material removed.  
+- **Acceleration:**  
+  - a_x, a_y, a_z: Acceleration along the X, Y, and Z axes.  
+  - a_sp: Acceleration along the spindle axis.  
+- **Velocity:**  
+  - v_x, v_y, v_z: Velocity along the X, Y, and Z axes.  
+  - v_sp: Velocity along the spindle axis.  
+- **Position:**  
+  - pos_x, pos_y, pos_z: Position coordinates along the X, Y, and Z axes.  
+  - pos_sp: Position along the spindle axis.  
+- **Current Parameters:**  
+  - curr_x, curr_y, curr_z: Current consumption along the X, Y, and Z axes.  
+  - curr_sp: Current consumption along the spindle axis.
 
 ## Models
 **Three distinct GAN architectures were implemented for synthetic data generation:**
