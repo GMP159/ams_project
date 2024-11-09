@@ -1,7 +1,7 @@
-# Generative Adversarial Networks for Time Series Synthetic Data Generation for CNC Machines
+# Generative Adversarial Networks to Create Time Series Synthetic Data Generation for Energy Consumption Monitoring of CNC Machines
 
 ## Project Description
-This project focuses on the generation of synthetic data to model and predict the performance and power requirements of CNC (Computer Numerical Control) machines. By leveraging the capabilities of Generative Adversarial Networks (GANs), the project aims to simulate realistic data that mirrors the operational patterns of CNC machinery, enabling more robust predictive analytics and enhancing decision-making for future machine maintenance and power management.
+This project focuses on the generation of synthetic data to model and predict the performance and energy requirements of CNC (Computer Numerical Control) machines. By leveraging the capabilities of Generative Adversarial Networks (GANs), the project aims to simulate realistic data that mirrors the operational patterns of CNC machinery, enabling more robust predictive analytics and enhancing decision-making for future machine maintenance and energy management.
 
 **Three distinct GAN architectures were implemented for synthetic data generation:**
 
@@ -10,6 +10,8 @@ This project focuses on the generation of synthetic data to model and predict th
 **TransformerGAN**: Leveraging the powerful Transformer architecture, this GAN is adept at capturing long-range dependencies and intricate data patterns. TransformerGAN provides high-quality synthetic data, especially where complex interactions and dependencies are present, enabling better insights into the nuanced performance characteristics of CNC machines.
 
 **WGAN (Wasserstein GAN):** Known for improved training stability, the WGAN model ensures high-quality synthetic data generation by minimizing the Wasserstein distance, leading to more accurate modeling of CNC machine performance metrics and power consumption data.
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://example.com/build-status)
+
 
 ## Features
 
