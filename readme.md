@@ -1,11 +1,11 @@
-# Generative Adversarial Networks to Create Time Series Synthetic Data Generation for Energy Consumption Monitoring of CNC Machines
+# Generative Adversarial Networks for Time Series Synthetic Data Generation to Monitor Energy Consumption of CNC Machines
 
 ## Project Description
 This project focuses on the generation of synthetic data to model and predict the performance and energy requirements of CNC (Computer Numerical Control) machines. By leveraging the capabilities of Generative Adversarial Networks (GANs), the project aims to simulate realistic data that mirrors the operational patterns of CNC machinery, enabling more robust predictive analytics and enhancing decision-making for future machine maintenance and energy management.
 
 **Three distinct GAN architectures were implemented for synthetic data generation:**
 
-**TimeGAN**: A GAN variant designed for time-series data, TimeGAN employs a Recurrent Neural Network (RNN)-based architecture, making it well-suited for modeling sequential dependencies and patterns in time-based CNC machine data. This model captures temporal dependencies, providing realistic synthetic datasets that resemble actual CNC machine operation sequences.
+**[TimeGAN](https://github.com/jsyoon0823/TimeGAN)**: A GAN variant designed for time-series data, TimeGAN employs a Recurrent Neural Network (RNN)-based architecture, making it well-suited for modeling sequential dependencies and patterns in time-based CNC machine data. This model captures temporal dependencies, providing realistic synthetic datasets that resemble actual CNC machine operation sequences.
 
 **TransformerGAN**: Leveraging the powerful Transformer architecture, this GAN is adept at capturing long-range dependencies and intricate data patterns. TransformerGAN provides high-quality synthetic data, especially where complex interactions and dependencies are present, enabling better insights into the nuanced performance characteristics of CNC machines.
 
