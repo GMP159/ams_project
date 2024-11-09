@@ -8,7 +8,7 @@ The dataset contains 22 columns and 19,388 rows, with all values being numerical
 Features (18 columns):
 
 **Force Parameters:**
-f_x_sim, f_y_sim, f_z_sim: Simulated force components along the X, Y, and Z axes.
+f_x_sim, f_y_sim, f_z_sim: Simulated force components along the X, Y, and Z axes.  
 f_sp_sim: Simulated force along the spindle axis.
 **Moment and Material Removed:**
 m_sp_sim: Simulated spindle moment.
