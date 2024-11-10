@@ -55,7 +55,7 @@ The repository is organized into three main folders, each includes scripts and m
 **How to Run:**
   - Run the following command:
     ```bash
-    $ python3 main_timegan.py --data_name stock --seq_len 24 --module gru --hidden_dim 24 --num_layer 3 --iteration 50000 --batch_size 128 --metric_iteration 10 ```
+    $ python3 main_timegan.py --data_name stock --seq_len 24 --module gru --hidden_dim 24 --num_layer 3 --iteration 50000 --batch_size 128 --metric_iteration 10 
   
   - Command inputs:
     - data_name: sine, stock, or energy
@@ -78,7 +78,7 @@ The repository is organized into three main folders, each includes scripts and m
 **How to Run:**
   - Run the following command:
     ```bash
-    $ python3 main.py ```
+    $ python3 main.py 
 
 **3. WGAN**  
 
@@ -91,7 +91,7 @@ The repository is organized into three main folders, each includes scripts and m
 **How to Run:**
   - Run the following command:
     ```bash
-                 ```
+                 
 
 
 ## Evaluation
