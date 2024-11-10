@@ -58,7 +58,7 @@ The repository is organized into three main folders, each includes scripts and m
     $ python3 main_timegan.py --data_name stock --seq_len 24 --module gru --hidden_dim 24 --num_layer 3 --iteration 50000 --batch_size 128 --metric_iteration 10 
   
   - Command inputs:
-    - data_name: sine, stock, or energy
+    - data_name: stock, energy, or CNC
     - seq_len: sequence length
     - module: gru, lstm, or lstmLN
     - hidden_dim: hidden dimensions
