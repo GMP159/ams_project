@@ -29,7 +29,7 @@ Features (18 columns):
 ## Models
 **Three distinct GAN architectures were implemented for synthetic data generation:**
 
-**[TimeGAN](https://github.com/jsyoon0823/TimeGAN)**: A GAN variant designed for time-series data, TimeGAN employs a Recurrent Neural Network (RNN)-based architecture, making it well-suited for modeling sequential dependencies and patterns in time-based CNC machine data. This model captures temporal dependencies, providing realistic synthetic datasets that resemble actual CNC machine operation sequences.
+**TimeGAN**: A GAN variant designed for time-series data, TimeGAN employs a Recurrent Neural Network (RNN)-based architecture, making it well-suited for modeling sequential dependencies and patterns in time-based CNC machine data. This model captures temporal dependencies, providing realistic synthetic datasets that resemble actual CNC machine operation sequences. It is based on this [paper](https://papers.nips.cc/paper_files/paper/2019/hash/c9efe5f26cd17ba6216bbe2a7d26d490-Abstract.html) And codebase was taken from this [repository](https://github.com/jsyoon0823/TimeGAN/tree/master)
 
 **TransformerGAN**: Leveraging the powerful Transformer architecture, this GAN is adept at capturing long-range dependencies and intricate data patterns. TransformerGAN provides high-quality synthetic data, especially where complex interactions and dependencies are present, enabling better insights into the nuanced performance characteristics of CNC machines.
 
