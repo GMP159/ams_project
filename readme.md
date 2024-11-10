@@ -29,11 +29,18 @@ Features (18 columns):
 ## Models
 **Three distinct GAN architectures were implemented for synthetic data generation:**
 
-**TimeGAN**: A GAN variant designed for time-series data, TimeGAN employs a Recurrent Neural Network (RNN)-based architecture, making it well-suited for modeling sequential dependencies and patterns in time-based CNC machine data. This model captures temporal dependencies, providing realistic synthetic datasets that resemble actual CNC machine operation sequences. It is based on this [paper](https://papers.nips.cc/paper_files/paper/2019/hash/c9efe5f26cd17ba6216bbe2a7d26d490-Abstract.html) And codebase was taken from this [repository](https://github.com/jsyoon0823/TimeGAN/tree/master)
+**TimeGAN**: A GAN variant designed for time-series data, TimeGAN employs a Recurrent Neural Network (RNN)-based architecture, making it well-suited for modeling sequential dependencies and patterns in time-based CNC machine data. This model captures temporal dependencies, providing realistic synthetic datasets that resemble actual CNC machine operation sequences. It is based on this [paper](https://papers.nips.cc/paper_files/paper/2019/hash/c9efe5f26cd17ba6216bbe2a7d26d490-Abstract.html) and codebase was taken from this [repository](https://github.com/jsyoon0823/TimeGAN/tree/master)
 
 **TransformerGAN**: Leveraging the powerful Transformer architecture, this GAN is adept at capturing long-range dependencies and intricate data patterns. TransformerGAN provides high-quality synthetic data, especially where complex interactions and dependencies are present, enabling better insights into the nuanced performance characteristics of CNC machines.
 
 **WGAN (Wasserstein GAN):** Known for improved training stability, the WGAN model ensures high-quality synthetic data generation by minimizing the Wasserstein distance, leading to more accurate modeling of CNC machine performance metrics and power consumption data.
+
+## Structure
+The repository is organized into three main folders, each containing the code for one of the GAN models used in this project:
+
+  - **time_GAN/:** Contains code for the TimeGAN model, which is designed for generating time-series data using an RNN-based architecture.
+  - **transformer_GAN/:** Contains code for the TransformerGAN model, which leverages Transformer architecture to model complex dependencies in the synthetic data.
+  - **WGAN/:** Contains code for the WGAN (Wasserstein GAN) model, known for stable training and high-quality data generation.
 
 
 ## Evaluation
