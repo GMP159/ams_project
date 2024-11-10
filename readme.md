@@ -106,5 +106,8 @@ The repository is organized into three main folders, each includes scripts and m
 
 - **Model Performance Tracking**: We are utilising the weights and biases library to track the performance of our model. With this, we are getting a dashboard with all the evaluation metrics and other performance measures.
 
-## References:
+## References
+1. Yoon, Jinsung, Daniel Jarrett, and Mihaela van der Schaar. "Time-series Generative Adversarial Networks" *NeurIPS*, 2019. [Link to paper](https://arxiv.org/abs/1906.02878).
+2. Xiaomin Li, Vangelis Metsis, Huangyingrui Wang, Anne Hee Hiong Ngu, "TTS-GAN: A Transformer-based Time-Series Generative Adversarial Network", *AIME*, 2022. [Link to paper](https://arxiv.org/abs/2202.02691)
+3. Arjovsky, Martin, Soumith Chintala, and Léon Bottou. "Wasserstein GAN" *ICML*, 2017. [Link to paper](https://arxiv.org/abs/1701.07875).
 
