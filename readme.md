@@ -108,18 +108,3 @@ The repository is organized into three main folders, each includes scripts and m
 
 ## References:
 
-The code is structured into following main components:
-
-model: Contains the transformer-based GAN architecture.
-metrics: Implements the evaluation metrics (descriptive, predictive, and Frechet Inception Score).
-main: 
-
-
-To run the project locally, follow these steps:
-
-1. Clone the repository:
-   
-   git clone <repository-url>
-   cd <project-folder>
-
-2. Modify the configuration files if needed (for custom datasets, hyperparameters, etc.).
