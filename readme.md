@@ -1,4 +1,4 @@
-# Generative Adversarial Networks for Time Series Synthetic Data Generation to Monitor Energy Consumption of CNC Machines
+# Generative Adversarial Networks for Synthetic Time Series Data Generation to Monitor Energy Consumption of CNC Machines
 
 ## Project Description
 This project focuses on the generation of synthetic data to model and predict the performance and energy requirements of CNC (Computer Numerical Control) machines. By leveraging the capabilities of Generative Adversarial Networks (GANs), the project aims to simulate realistic data that mirrors the operational patterns of CNC machinery, enabling more robust predictive analytics and enhancing decision-making for future machine maintenance and energy management.
