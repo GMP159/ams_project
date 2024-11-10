@@ -44,6 +44,7 @@ The repository is organized into three main folders, each includes scripts and m
     
 
 **1. time_GAN/**  
+
 **Files:**
   - **data_loading.py:** Script to transform raw time series data to preprocessed normalised time series data.
   - **time_gan.py:** Script to train the model and generate synthetic data using the trained TimeGAN model.
