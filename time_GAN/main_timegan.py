@@ -67,12 +67,9 @@ def main (args):
     - metric_results: discriminative and predictive scores
   """
   ## Data loading
-  if args.data_name in ['stock', 'energy', 'CNC']:
+  if args.data_name in ['stock','energy','CNC']:
     ori_data = real_data_loading(args.data_name, args.seq_len)
-  elif args.data_name == 'sine':
-    # Set number of samples and its dimensions
-    no, dim = 10000, 5
-    ori_data = sine_data_generation(no, args.seq_len, dim)
+  
     
   print(args.data_name + ' dataset is ready.')
     
@@ -147,7 +144,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument(
       '--data_name',
-      choices=['sine','stock','energy','CNC'],
+      choices=['stock','energy','CNC'],
       default='stock',
       type=str)
   parser.add_argument(
