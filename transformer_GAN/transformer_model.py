@@ -130,26 +130,27 @@ def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_lay
             noise = torch.randn((batch_size, max_length, noise_dim)).to(device)
 
             # 2. Discriminator training (once per epoch)
-            for _ in range(2):
-                with autocast():
-                    fake_data = generator(noise)
-                    
-                    disc_real = discriminator(real_batch).view(-1)
-                    #print("disc_real",disc_real.size(), disc_real)
-                    loss_disc_real = criterion(disc_real, torch.ones_like(disc_real))
-                    disc_fake = discriminator(fake_data.detach()).view(-1)
-                    #print("disc_fake",disc_fake.size(), disc_fake)
-                    loss_disc_fake = criterion(disc_fake, torch.zeros_like(disc_fake))
-                    loss_disc = (loss_disc_real + loss_disc_fake) / 2
+            
+            with autocast():
+                fake_data = generator(noise)
+                
+                disc_real = discriminator(real_batch).view(-1)
+                #print("disc_real",disc_real.size(), disc_real)
+                loss_disc_real = criterion(disc_real, torch.ones_like(disc_real))
+                disc_fake = discriminator(fake_data.detach()).view(-1)
+                #print("disc_fake",disc_fake.size(), disc_fake)
+                loss_disc_fake = criterion(disc_fake, torch.zeros_like(disc_fake))
+                loss_disc = (loss_disc_real + loss_disc_fake) / 2
 
-                # Gradient Accumulation for Discriminator
-                loss_disc = loss_disc / accumulation_steps
-                discriminator.zero_grad()
-                scaler.scale(loss_disc).backward(retain_graph=True)
-                if (_ + 1) % accumulation_steps == 0:
-                    scaler.step(opt_disc)
-                    scaler.update()
+            # Gradient Accumulation for Discriminator
+            loss_disc = loss_disc / accumulation_steps
+            discriminator.zero_grad()
+            scaler.scale(loss_disc).backward(retain_graph=True)
+            if (_ + 1) % accumulation_steps == 0:
+                scaler.step(opt_disc)
+                scaler.update()
 
+            
             with autocast():
                 output = discriminator(fake_data).view(-1)
                 loss_gen = criterion(output, torch.ones_like(output))
@@ -180,10 +181,10 @@ def train_transformer_model(real_data, noise_dim, input_dim, embed_size, num_lay
 
 
 
-# Function to generate synthetic data
+#  synthetic data generation
 def generate_synthetic_data(generator, noise_dim, num_samples, device):
-    generator.eval()  # Set the generator to evaluation mode
-    with torch.no_grad():  # No need to track gradients
-        noise = torch.randn((num_samples, 1, noise_dim)).to(device)  # Generate random noise
-        synthetic_data = generator(noise).squeeze(1).cpu().numpy()  # Convert to numpy array and remove channel dimension
+    generator.eval()  
+    with torch.no_grad(): 
+        noise = torch.randn((num_samples, 1, noise_dim)).to(device)  
+        synthetic_data = generator(noise).squeeze(1).cpu().numpy()  
     return synthetic_data
