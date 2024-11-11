@@ -35,7 +35,7 @@ warnings.filterwarnings("ignore")
 # 1. TimeGAN model
 from time_gan import timegan
 # 2. Data loading
-from data_loading import real_data_loading, sine_data_generation
+from data_loading import real_data_loading
 # 3. Metrics
 from metrics.discriminative_metrics import discriminative_score_metrics
 from metrics.predictive_metrics import predictive_score_metrics
@@ -51,7 +51,7 @@ def main (args):
   """Main function for timeGAN experiments.
   
   Args:
-    - data_name: sine, stock, or energy
+    - data_name: stock, energy, or CNC
     - seq_len: sequence length
     - Network parameters (should be optimized for different datasets)
       - module: gru, lstm, or lstmLN
