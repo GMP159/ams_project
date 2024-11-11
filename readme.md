@@ -1,4 +1,4 @@
-# Generative Adversarial Networks for Time Series Synthetic Data Generation to Monitor Energy Consumption of CNC Machines
+# Generative Adversarial Networks for Synthetic Time Series Data Generation to Monitor Energy Consumption of CNC Machines
 
 ## Project Description
 This project focuses on the generation of synthetic data to model and predict the performance and energy requirements of CNC (Computer Numerical Control) machines. By leveraging the capabilities of Generative Adversarial Networks (GANs), the project aims to simulate realistic data that mirrors the operational patterns of CNC machinery, enabling more robust predictive analytics and enhancing decision-making for future machine maintenance and energy management.
@@ -58,7 +58,7 @@ The repository is organized into three main folders, each includes scripts and m
     $ python3 main_timegan.py --data_name stock --seq_len 24 --module gru --hidden_dim 24 --num_layer 3 --iteration 50000 --batch_size 128 --metric_iteration 10 
   
   - Command inputs:
-    - data_name: sine, stock, or energy
+    - data_name: stock, energy, or CNC
     - seq_len: sequence length
     - module: gru, lstm, or lstmLN
     - hidden_dim: hidden dimensions
