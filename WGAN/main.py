@@ -1,202 +1,98 @@
 import pandas as pd
 import torch
-import torch.nn as nn
 import numpy as np
-import matplotlib.pyplot as plt
 from torch.autograd import Variable
-from sklearn.preprocessing import MinMaxScaler
+from data_loader import load_data, get_data_loader
+from wgan import Generator, Critic, Hyperparameters, weights_init_normal
+from metrics.discriminative_score import discriminative_score_metric
 from IPython.display import clear_output
 
-# Load the CSV data
-data = pd.read_csv('cnc.csv')
+# Define device and Tensor type
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
 
-# Select the relevant columns
-data = data[['f_x_sim', 'f_y_sim', 'f_z_sim', 'f_sp_sim', 'm_sp_sim', 
-              'materialremoved_sim', 'a_x', 'a_y', 'a_z', 'a_sp', 
-              'v_x', 'v_y', 'v_z', 'v_sp', 'pos_x', 'pos_y', 
-              'pos_z', 'pos_sp']]
-
-# Normalize the data
-scaler = MinMaxScaler()
-data = scaler.fit_transform(data)
-
-# Define the sequence length and number of features
+# Load data
 seq_length = 50  # Example sequence length
-num_features = data.shape[1]  # Number of features in the data
+file_path = 'data/cnc.csv'
+train_data, scaler = load_data(file_path, seq_length)
 
-# Generate sequences
-def create_sequences(data, seq_length):
-    sequences = []
-    for i in range(len(data) - seq_length):
-        sequences.append(data[i:i + seq_length])
-    return np.array(sequences)
-
-sequences = create_sequences(data, seq_length)
-
-# Convert to PyTorch tensors
-train_data = torch.FloatTensor(sequences)
-
-# Create a DataLoader
+# Create DataLoader
 batch_size = 64
-train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle=True)
+train_loader = get_data_loader(train_data, batch_size)
 
-# Hyperparameters
-class Hyperparameters(object):
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
-
+# Set up hyperparameters
 hp = Hyperparameters(
     n_epochs=1000,
     batch_size=batch_size,
-    lr=0.00007,
+    lr=0.0007,
     n_cpu=8,
     latent_dim=100,
     seq_length=seq_length,
-    num_features=num_features,
+    num_features=train_data.shape[2],  # Number of features in the data
     n_critic=5,
     clip_value=0.02,
     sample_interval=400,
 )
 
-# Define the Generator
-class Generator(nn.Module):
-    def __init__(self, seq_length, latent_dim, num_features):
-        super(Generator, self).__init__()
-
-        def block(in_features, out_features, normalize=True):
-            layers = [nn.Linear(in_features, out_features)]
-            if normalize:
-                layers.append(nn.BatchNorm1d(out_features, 0.8))
-            layers.append(nn.LeakyReLU(0.2, inplace=True))
-            return layers
-
-        self.model = nn.Sequential(
-            *block(latent_dim, 128, normalize=False),
-            *block(128, 256),
-            *block(256, 512),
-            *block(512, 1024),
-            nn.Linear(1024, seq_length * num_features),
-            nn.Tanh()  # Use Tanh for normalization
-        )
-
-    def forward(self, z):
-        time_series = self.model(z)
-        time_series = time_series.view(time_series.shape[0], hp.seq_length, hp.num_features)
-        return time_series
-
-# Define the Critic
-class Critic(nn.Module):
-    def __init__(self, seq_length, num_features):
-        super(Critic, self).__init__()
-
-        self.model = nn.Sequential(
-            nn.Linear(seq_length * num_features, 512),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.Linear(512, 256),
-            nn.LeakyReLU(0.2, inplace=True),
-            nn.Linear(256, 1)
-        )
-
-    def forward(self, time_series):
-        time_series_flat = time_series.view(time_series.shape[0], -1)
-        validity = self.model(time_series_flat)
-        return validity
-
 # Initialize models
-generator = Generator(hp.seq_length, hp.latent_dim, hp.num_features)
-critic = Critic(hp.seq_length, hp.num_features)
-
-# Check if CUDA is available
-cuda = True if torch.cuda.is_available() else False
-Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
-
-if cuda:
-    generator.cuda()
-    critic.cuda()
+generator = Generator(hp.seq_length, hp.latent_dim, hp.num_features).to(device)
+critic = Critic(hp.seq_length, hp.num_features).to(device)
+generator.apply(weights_init_normal)
+critic.apply(weights_init_normal)
 
 # Initialize optimizers
 optimizer_G = torch.optim.RMSprop(generator.parameters(), lr=hp.lr)
 optimizer_D = torch.optim.RMSprop(critic.parameters(), lr=hp.lr)
-
-# Weight initialization
-def weights_init_normal(m):
-    if isinstance(m, nn.Linear):
-        nn.init.normal_(m.weight.data, 0.0, 0.02)
-        if m.bias is not None:
-            nn.init.constant_(m.bias.data, 0.0)
-
-generator.apply(weights_init_normal)
-critic.apply(weights_init_normal)
 
 # Training function
 def train():
     generated_data_list = []  # List to collect generated data
     for epoch in range(hp.n_epochs):
         for i, time_series in enumerate(train_loader):
-            # Configure input
-            real_time_series = Variable(time_series.type(Tensor))
+            real_time_series = Variable(time_series.type(Tensor)).to(device)
 
             # Train Critic
             optimizer_D.zero_grad()
-
-            # Sample noise as generator input
-            z = Variable(Tensor(np.random.normal(0, 1, (time_series.shape[0], hp.latent_dim))))
-
-            # Generate a batch of time series
+            z = torch.tensor(np.random.normal(0, 1, (time_series.shape[0], hp.latent_dim)), dtype=torch.float, device=device)
             fake_time_series = generator(z).detach()
-
-            # Loss for real and fake time series
             d_loss = -torch.mean(critic(real_time_series)) + torch.mean(critic(fake_time_series))
             d_loss.backward()
 
             # Clip gradients of the critic
             for param in critic.parameters():
                 param.grad.data.clamp_(-hp.clip_value, hp.clip_value)
-
             optimizer_D.step()
 
-            # Train the generator every n_critic iterations
+            # Train Generator
             if i % hp.n_critic == 0:
                 optimizer_G.zero_grad()
-
-                # Generate a batch of time series
                 gen_time_series = generator(z)
-
-                # Loss for generator
                 g_loss = -torch.mean(critic(gen_time_series))
                 g_loss.backward()
                 optimizer_G.step()
 
             # Log progress
             batches_done = epoch * len(train_loader) + i
-
             if batches_done % hp.sample_interval == 0:
                 clear_output(wait=True)
                 print(f"Epoch: {epoch} Batch: {i} D_loss: {d_loss.item()} G_loss: {g_loss.item()}")
 
-                # Save the generated time series data
-                if (epoch == 999 or epoch==998 or epoch==997 or epoch==996):
-                    np.save(f"generated_timeseries_epoch_{epoch}_batch_{i}.npy", gen_time_series.cpu().data.numpy())
-                elif (epoch == 200 or epoch==201 or epoch==202 or epoch==203):
-                    np.save(f"generated_timeseries_epoch_{epoch}_batch_{i}.npy", gen_time_series.cpu().data.numpy())
-                elif (epoch == 500 or epoch==501 or epoch==502 or epoch==503):
-                    np.save(f"generated_timeseries_epoch_{epoch}_batch_{i}.npy", gen_time_series.cpu().data.numpy())
-
-                # Store the generated data for later
+                # Save generated data periodically
                 generated_data_list.append(gen_time_series.cpu().data.numpy())
+                discriminative_score = discriminative_score_metric(
+                    critic=critic, 
+                    real_data=real_time_series.cpu().data.numpy(),
+                    synthetic_data=gen_time_series.cpu().data.numpy(),
+                    device=device
+                )
+                print(f"Discriminative Score: {discriminative_score}")
 
-    # Convert the collected generated data to a numpy array
+    # Process and save final generated data
     generated_data_array = np.concatenate(generated_data_list, axis=0)
-
-    # Reshape for inverse transform
     generated_data_array = generated_data_array.reshape(-1, hp.seq_length * hp.num_features)
-
-    # Inverse transform to get the original scale
     generated_data_array = scaler.inverse_transform(generated_data_array)
-
-    # Save the generated data to a CSV file
     generated_df = pd.DataFrame(generated_data_array)
     generated_df.to_csv('synthetic_data.csv', index=False, header=False)
 
-# Start the training
+# Start training
 train()

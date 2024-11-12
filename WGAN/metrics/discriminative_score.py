@@ -25,7 +25,7 @@ def discriminative_score_metric(critic, real_data, synthetic_data, device, test_
     """
 
     # Combine real and synthetic data
-    real_data = real_data.cpu().detach().numpy()  # Remove GPU dependency
+    real_data = real_data if isinstance(real_data, np.ndarray) else real_data.cpu().detach().numpy()
     combined_data = np.vstack([real_data, synthetic_data])  # Combine real and generated data
     labels = np.array([1]*real_data.shape[0] + [0]*synthetic_data.shape[0])  # 1 for real, 0 for synthetic
 
