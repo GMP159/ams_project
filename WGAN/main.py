@@ -1,98 +1,111 @@
-import pandas as pd
 import torch
+import torch.optim as optim
+from wgan_2 import Generator, Critic
+from data_loader_2 import load_data
+from discriminative_score_2 import discriminative_score_metric
 import numpy as np
-from torch.autograd import Variable
-from data_loader import load_data, get_data_loader
-from wgan import Generator, Critic, Hyperparameters, weights_init_normal
-from metrics.discriminative_score import discriminative_score_metric
-from IPython.display import clear_output
+import pandas as pd
 
-# Define device and Tensor type
+# Check for GPU availability
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
+print(f"Using device: {device}")
 
-# Load data
-seq_length = 50  # Example sequence length
-file_path = 'data/cnc.csv'
-train_data, scaler = load_data(file_path, seq_length)
+# Hyperparameters
+latent_dim = 100
+num_epochs = 200
+batch_size = 128
+learning_rate = 0.0005
+lambda_gp = 10
 
-# Create DataLoader
-batch_size = 64
-train_loader = get_data_loader(train_data, batch_size)
+# Load and preprocess data, transferring it to the device
+data_loader, data_dim, scaler = load_data(batch_size, device)
 
-# Set up hyperparameters
-hp = Hyperparameters(
-    n_epochs=1000,
-    batch_size=batch_size,
-    lr=0.0007,
-    n_cpu=8,
-    latent_dim=100,
-    seq_length=seq_length,
-    num_features=train_data.shape[2],  # Number of features in the data
-    n_critic=5,
-    clip_value=0.02,
-    sample_interval=400,
-)
+# Initialize Generator and Critic on the chosen device
+generator = Generator(latent_dim, data_dim).to(device)
+critic = Critic(data_dim).to(device)
 
-# Initialize models
-generator = Generator(hp.seq_length, hp.latent_dim, hp.num_features).to(device)
-critic = Critic(hp.seq_length, hp.num_features).to(device)
-generator.apply(weights_init_normal)
-critic.apply(weights_init_normal)
+# Optimizers
+optimizer_G = optim.Adam(generator.parameters(), lr=learning_rate, betas=(0.5, 0.9))
+optimizer_C = optim.Adam(critic.parameters(), lr=learning_rate, betas=(0.5, 0.9))
 
-# Initialize optimizers
-optimizer_G = torch.optim.RMSprop(generator.parameters(), lr=hp.lr)
-optimizer_D = torch.optim.RMSprop(critic.parameters(), lr=hp.lr)
+# Helper function for gradient penalty
+def compute_gradient_penalty(critic, real_data, fake_data):
+    alpha = torch.rand(real_data.size(0), 1, device=device)
+    interpolates = alpha * real_data + (1 - alpha) * fake_data
+    interpolates = interpolates.requires_grad_(True).to(device)
 
-# Training function
-def train():
-    generated_data_list = []  # List to collect generated data
-    for epoch in range(hp.n_epochs):
-        for i, time_series in enumerate(train_loader):
-            real_time_series = Variable(time_series.type(Tensor)).to(device)
+    critic_interpolates = critic(interpolates)
+    gradients = torch.autograd.grad(
+        outputs=critic_interpolates,
+        inputs=interpolates,
+        grad_outputs=torch.ones_like(critic_interpolates),
+        create_graph=True,
+        retain_graph=True
+    )[0]
 
-            # Train Critic
-            optimizer_D.zero_grad()
-            z = torch.tensor(np.random.normal(0, 1, (time_series.shape[0], hp.latent_dim)), dtype=torch.float, device=device)
-            fake_time_series = generator(z).detach()
-            d_loss = -torch.mean(critic(real_time_series)) + torch.mean(critic(fake_time_series))
-            d_loss.backward()
+    gradients = gradients.view(gradients.size(0), -1)
+    gradient_penalty = lambda_gp * ((gradients.norm(2, dim=1) - 1) ** 2).mean()
+    return gradient_penalty
 
-            # Clip gradients of the critic
-            for param in critic.parameters():
-                param.grad.data.clamp_(-hp.clip_value, hp.clip_value)
-            optimizer_D.step()
+# Training the WGAN-GP
+for epoch in range(num_epochs):
+    for real_data_batch in data_loader:
+        real_data = real_data_batch[0].to(device)  # Move real data batch to GPU
+        batch_size_actual = real_data.size(0)  # Get the actual batch size for the final batch
 
-            # Train Generator
-            if i % hp.n_critic == 0:
-                optimizer_G.zero_grad()
-                gen_time_series = generator(z)
-                g_loss = -torch.mean(critic(gen_time_series))
-                g_loss.backward()
-                optimizer_G.step()
+        # Train Critic
+        for _ in range(5):
+            z = torch.randn(batch_size_actual, latent_dim, device=device)  # Match the batch size of real_data
+            fake_data = generator(z).detach()
 
-            # Log progress
-            batches_done = epoch * len(train_loader) + i
-            if batches_done % hp.sample_interval == 0:
-                clear_output(wait=True)
-                print(f"Epoch: {epoch} Batch: {i} D_loss: {d_loss.item()} G_loss: {g_loss.item()}")
+            critic_real = critic(real_data)
+            critic_fake = critic(fake_data)
+            loss_C = -(torch.mean(critic_real) - torch.mean(critic_fake))
 
-                # Save generated data periodically
-                generated_data_list.append(gen_time_series.cpu().data.numpy())
-                discriminative_score = discriminative_score_metric(
-                    critic=critic, 
-                    real_data=real_time_series.cpu().data.numpy(),
-                    synthetic_data=gen_time_series.cpu().data.numpy(),
-                    device=device
-                )
-                print(f"Discriminative Score: {discriminative_score}")
+            gradient_penalty = compute_gradient_penalty(critic, real_data, fake_data)
+            loss_C += gradient_penalty
 
-    # Process and save final generated data
-    generated_data_array = np.concatenate(generated_data_list, axis=0)
-    generated_data_array = generated_data_array.reshape(-1, hp.seq_length * hp.num_features)
-    generated_data_array = scaler.inverse_transform(generated_data_array)
-    generated_df = pd.DataFrame(generated_data_array)
-    generated_df.to_csv('synthetic_data.csv', index=False, header=False)
+            optimizer_C.zero_grad()
+            loss_C.backward()
+            optimizer_C.step()
 
-# Start training
-train()
+    # Train Generator
+    z = torch.randn(batch_size, latent_dim, device=device)
+    fake_data = generator(z)
+    loss_G = -torch.mean(critic(fake_data))
+
+    optimizer_G.zero_grad()
+    loss_G.backward()
+    optimizer_G.step()
+
+    # Print losses every 100 epochs
+    if epoch % 10 == 0:
+        print(f"Epoch {epoch} | Critic Loss: {loss_C.item()} | Generator Loss: {loss_G.item()}")
+
+# Save the trained generator model weights
+torch.save(generator.state_dict(), 'generator_model.pth')
+print("Trained generator model saved as 'generator_model.pth'")
+
+# Calculate discriminative score after training
+with torch.no_grad():
+    num_samples = len(data_loader.dataset)
+    synthetic_data = []
+
+    for _ in range(num_samples // batch_size + 1):
+        z = torch.randn(batch_size, latent_dim, device=device)
+        synthetic_batch = generator(z).cpu().numpy()
+        synthetic_data.append(synthetic_batch)
+
+synthetic_data = np.vstack(synthetic_data)[:num_samples]
+synthetic_data = scaler.inverse_transform(synthetic_data)
+columns = ['f_x_sim', 'f_y_sim', 'f_z_sim', 'f_sp_sim', 'm_sp_sim', 
+           'materialremoved_sim', 'a_x', 'a_y', 'a_z', 'a_sp', 
+           'v_x', 'v_y', 'v_z', 'v_sp', 'pos_x', 'pos_y', 
+           'pos_z', 'pos_sp']
+# Save synthetic data
+synthetic_data_df = pd.DataFrame(synthetic_data, columns=columns)
+synthetic_data_df.to_csv('synthetic_financial_data.csv', index=False)
+print("Synthetic data saved to 'synthetic_financial_data.csv'")
+
+discriminative_score = discriminative_score_metric(critic, data_loader.dataset.tensors[0].cpu(), synthetic_data, device)
+print(f"Discriminative Score: {discriminative_score}")
