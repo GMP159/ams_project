@@ -1,8 +1,8 @@
 import torch
 import torch.optim as optim
-from wgan_2 import Generator, Critic
-from data_loader_2 import load_data
-from discriminative_score_2 import discriminative_score_metric
+from wgan import Generator, Critic
+from data_loader import load_data
+from metrics.discriminative_score import discriminative_score_metric
 import numpy as np
 import pandas as pd
 
