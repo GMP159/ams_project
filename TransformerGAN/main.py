@@ -27,7 +27,7 @@ dropout = 0.1                 # Dropout rate
 max_length = 50              # Maximum sequence length
 batch_size = 64               # Batch size
 learning_rate = 2e-4          # Learning rate for optimizers
-num_epochs = 500           # Number of epochs to train
+num_epochs = 3000           # Number of epochs to train
 accumulation_steps = 8        # Gradient accumulation steps
 device = 'cuda' if torch.cuda.is_available() else 'cpu'  # Device to use
 
