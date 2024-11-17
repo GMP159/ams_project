@@ -92,8 +92,8 @@ The repository is organized into three main folders, each includes scripts and m
   - Run the following command:
     ```bash
     $ python3 main.py      
-  ~ Run pca_tsne.py separately for visualizing the synthetic data.
-  ~ Run predictive.py independently to evaluate the predictive performance of the synthetic data.
+  - Run pca_tsne.py separately for visualizing the synthetic data.
+  - Run predictive.py independently to evaluate the predictive performance of the synthetic data.
 
 
 ## Evaluation
