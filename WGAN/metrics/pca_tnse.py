@@ -5,7 +5,7 @@ from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 
 # Load Real Data
-real_data_df = pd.read_csv("data/cnc.csv")  # Replace with the path to your real data CSV
+real_data_df = pd.read_csv("WGAN\data\cnc.csv")  # Replace with the path to your real data CSV
 selected_columns = ['f_x_sim', 'f_y_sim', 'f_z_sim', 'f_sp_sim', 'm_sp_sim', 
                     'materialremoved_sim', 'a_x', 'a_y', 'a_z', 'a_sp', 
                     'v_x', 'v_y', 'v_z', 'v_sp', 'pos_x', 'pos_y', 
@@ -14,7 +14,7 @@ real_data_df = real_data_df[selected_columns]
 real_data = real_data_df.values
 
 # Load Synthetic Data
-synthetic_data_df = pd.read_csv("synthetic_data.csv")  # Replace with the path to your WGAN synthetic data CSV
+synthetic_data_df = pd.read_csv("Results\w_GAN\synthetic_data.csv")  # Replace with the path to your WGAN synthetic data CSV
 synthetic_data_df = synthetic_data_df[selected_columns]
 synthetic_data = synthetic_data_df.values
 

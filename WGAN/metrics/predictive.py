@@ -8,14 +8,13 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.preprocessing import MinMaxScaler
 
 # Load and preprocess data
-original_data = pd.read_csv('cnc.csv')
+original_data = pd.read_csv('WGAN\data\cnc.csv')
 
-original_data = pd.read_csv('cnc.csv')
 original_data = original_data[['f_x_sim', 'f_y_sim', 'f_z_sim', 'f_sp_sim', 'm_sp_sim', 'materialremoved_sim', 
              'a_x', 'a_y', 'a_z', 'a_sp', 'v_x', 'v_y', 'v_z', 'v_sp', 'pos_x', 'pos_y', 
              'pos_z', 'pos_sp']]
 
-generated_data = pd.read_csv('synthetic_data.csv', header=None)
+generated_data = pd.read_csv('Results\w_GAN\synthetic_data.csv')
 
 scaler = MinMaxScaler()
 original_data = scaler.fit_transform(original_data)

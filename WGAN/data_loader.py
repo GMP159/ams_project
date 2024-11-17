@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 def load_data(batch_size, device):
     # Load and preprocess CSV data
-    data_path = 'data/cnc.csv'  # Replace with your file path
+    data_path = 'WGAN\data\cnc.csv'  # Replace with your file path
     data = pd.read_csv(data_path)
     
     # Select relevant columns
